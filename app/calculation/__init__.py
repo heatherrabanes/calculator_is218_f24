@@ -1,9 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Union
-from app.operations import addition, subtraction, multiplication, division
-
-# Define a type alias for numbers (both int and float)
-Number = Union[int, float]
+from app.operations import addition, subtraction, multiplication, division, Number
 
 # The Calculation class is now an abstract base class (ABC).
 # An abstract class cannot be instantiated directly and is meant to be inherited by subclasses.

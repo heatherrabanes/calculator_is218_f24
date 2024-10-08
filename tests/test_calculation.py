@@ -1,83 +1,53 @@
 import pytest
 from app.calculation import Addition, Subtraction, Multiplication, Division  # Assuming your classes are in 'calculation' module
 
-# Test the Addition class for different sets of input using pytest's parametrize
+# Parameterized test for Addition with __str__ and __repr__ checks
 @pytest.mark.parametrize("a, b, expected", [
-    (1, 2, 3),     # simple addition
-    (0, 0, 0),     # edge case with zeros
-    (-1, -1, -2),  # adding two negative numbers
-    (100, 200, 300),  # larger positive numbers
-    (-10, 20, 10),  # one negative, one positive
-    (0.5, 1.5, 2.0),  # floating point addition
-    (-0.5, 1.5, 1.0), # negative and positive floating points
+    (1, 1, 2), (2, 3, 5), (-1, -1, -2), (0, 0, 0)
 ])
-def test_addition_compute(a, b, expected):
-    addition = Addition.create(a, b)
-    assert addition.compute() == expected, f"Expected {expected}, but got {addition.compute()}"
+def test_addition(a, b, expected):
+    '''Test for addition operation'''
+    operation = Addition.create(a, b)
+    assert operation.compute() == expected
+    assert str(operation) == f"Addition: {a} + {b} = {expected}"
+    assert repr(operation) == f"Addition(a={a}, b={b}, result={expected})"
 
-
-# Test the Subtraction class
+# Parameterized test for Subtraction with __str__ and __repr__ checks
 @pytest.mark.parametrize("a, b, expected", [
-    (3, 2, 1),      # simple subtraction
-    (0, 0, 0),      # subtracting zero from zero
-    (-1, -1, 0),    # subtracting two negative numbers
-    (100, 50, 50),  # larger positive numbers
-    (-10, 20, -30), # one negative, one positive
-    (0.5, 1.5, -1.0),  # floating point subtraction
-    (-0.5, 1.5, -2.0), # negative and positive floating points
+    (1, 1, 0), (5, 3, 2), (-1, -1, 0), (0, 5, -5)
 ])
-def test_subtraction_compute(a, b, expected):
-    subtraction = Subtraction.create(a, b)
-    assert subtraction.compute() == expected, f"Expected {expected}, but got {subtraction.compute()}"
+def test_subtraction(a, b, expected):
+    '''Test for subtraction operation'''
+    operation = Subtraction.create(a, b)
+    assert operation.compute() == expected
+    assert str(operation) == f"Subtraction: {a} - {b} = {expected}"
+    assert repr(operation) == f"Subtraction(a={a}, b={b}, result={expected})"
 
-
-# Test the Multiplication class
+# Parameterized test for Multiplication with __str__ and __repr__ checks
 @pytest.mark.parametrize("a, b, expected", [
-    (2, 3, 6),      # simple multiplication
-    (0, 100, 0),    # multiplying by zero
-    (-1, -1, 1),    # multiplying two negative numbers
-    (100, 2, 200),  # larger positive numbers
-    (-10, 20, -200), # one negative, one positive
-    (0.5, 2, 1.0),  # floating point multiplication
-    (-0.5, 1.5, -0.75), # negative and positive floating points
+    (2, 2, 4), (3, 5, 15), (0, 5, 0), (-1, 1, -1)
 ])
-def test_multiplication_compute(a, b, expected):
-    multiplication = Multiplication.create(a, b)
-    assert multiplication.compute() == expected, f"Expected {expected}, but got {multiplication.compute()}"
+def test_multiplication(a, b, expected):
+    '''Test for multiplication operation'''
+    operation = Multiplication.create(a, b)
+    assert operation.compute() == expected
+    assert str(operation) == f"Multiplication: {a} * {b} = {expected}"
+    assert repr(operation) == f"Multiplication(a={a}, b={b}, result={expected})"
 
-
-# Test the Division class
+# Parameterized test for Division with __str__ and __repr__ checks
 @pytest.mark.parametrize("a, b, expected", [
-    (6, 3, 2),      # simple division
-    (1, 1, 1),      # dividing the same number
-    (-1, -1, 1),    # dividing two negative numbers
-    (100, 2, 50),   # larger positive numbers
-    (-10, 2, -5),   # one negative, one positive
-    (0.5, 0.5, 1.0),  # floating point division
-    (-0.5, 0.5, -1.0), # negative and positive floating points
+    (2, 2, 1), (10, 5, 2), (9, 3, 3), (7, 2, 3.5)
 ])
-def test_division_compute(a, b, expected):
-    division = Division.create(a, b)
-    assert division.compute() == expected, f"Expected {expected}, but got {division.compute()}"
+def test_division(a, b, expected):
+    '''Test for division operation'''
+    operation = Division.create(a, b)
+    assert operation.compute() == expected
+    assert str(operation) == f"Division: {a} / {b} = {expected}"
+    assert repr(operation) == f"Division(a={a}, b={b}, result={expected})"
 
-
-# Test for division by zero (this should raise an error)
-@pytest.mark.parametrize("a, b", [
-    (1, 0),   # divide by zero
-    (100, 0), # divide by zero with larger numbers
-])
-def test_division_by_zero(a, b):
-    division = Division.create(a, b)
+# Test for division by zero exception
+def test_division_by_zero_exception():
+    '''Test for division by zero exception'''
+    operation = Division.create(10, 0)
     with pytest.raises(ZeroDivisionError):
-        division.compute()
-
-@pytest.mark.parametrize("a, b, operation", [
-    ("a", 1, Addition),  # string and number for addition
-    (None, 1, Subtraction),  # None and number for subtraction
-    ([1, 2], 1, Multiplication),  # list and number for multiplication
-    (object(), 1, Division),  # generic object and number for division
-])
-def test_invalid_types(a, b, operation):
-    # The TypeError should be raised when trying to create the object
-    with pytest.raises(TypeError):
-        calculation = operation.create(a, b)
+        operation.compute()

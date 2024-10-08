@@ -4,17 +4,7 @@ import pytest
 import pexpect
 import sys
 
-@pytest.fixture
-def repl():
-    """Fixture to start the REPL application."""
-    # Path to the main.py script
-    script = 'main.py'
 
-    # Start the REPL application
-    child = pexpect.spawn(sys.executable + f' {script}', encoding='utf-8', timeout=5)
-    child.expect('Welcome to the Calculator REPL.*')
-    yield child
-    child.terminate()
 
 def test_repl_addition(repl):
     """Test addition operation in the REPL."""

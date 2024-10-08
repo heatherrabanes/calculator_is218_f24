@@ -1,12 +1,6 @@
 # test_calculator.py
 
 import pytest
-from app.calculator import Calculator  # Adjust the import path as necessary
-
-# Fixture to create a Calculator instance
-@pytest.fixture
-def calc():
-    return Calculator.create()
 
 # Parameterized tests for the add method
 @pytest.mark.parametrize("a, b, expected", [

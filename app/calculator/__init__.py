@@ -3,9 +3,9 @@ from app.operations import addition, subtraction, multiplication, division
 
 class Calculator:
 
-    @staticmethod
-    def create():
-        return Calculator()
+    @classmethod
+    def create(cls):
+        return cls()
 
     def add(self, a, b):
         return addition(a, b)

@@ -110,3 +110,4 @@ def test_undo_last():
     # Ensure that undoing when the history is empty returns None
     last_operation = history_manager.undo_last()
     assert last_operation is None
+    

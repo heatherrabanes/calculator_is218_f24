@@ -70,3 +70,4 @@ def test_repl_multiple_operations(repl):
     repl.sendline('exit')
     repl.expect('Goodbye!')
     repl.expect(pexpect.EOF)
+    

@@ -78,3 +78,4 @@ def test_delete_file_negative(fs, caplog):
 
     # Check logging without quotes around the filename
     assert "File not found for deletion: non_existent_file.txt" in caplog.text
+    

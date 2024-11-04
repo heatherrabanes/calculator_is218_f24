@@ -1,53 +1,108 @@
 import pytest
-from app.calculation import Addition, Subtraction, Multiplication, Division  # Assuming your classes are in 'calculation' module
+from decimal import Decimal
+from datetime import datetime
+from app.calculation import Calculation
+from app.exceptions import OperationError
 
-# Parameterized test for Addition with __str__ and __repr__ checks
-@pytest.mark.parametrize("a, b, expected", [
-    (1, 1, 2), (2, 3, 5), (-1, -1, -2), (0, 0, 0)
-])
-def test_addition(a, b, expected):
-    '''Test for addition operation'''
-    operation = Addition.create(a, b)
-    assert operation.compute() == expected
-    assert str(operation) == f"Addition: {a} + {b} = {expected}"
-    assert repr(operation) == f"Addition(a={a}, b={b}, result={expected})"
 
-# Parameterized test for Subtraction with __str__ and __repr__ checks
-@pytest.mark.parametrize("a, b, expected", [
-    (1, 1, 0), (5, 3, 2), (-1, -1, 0), (0, 5, -5)
-])
-def test_subtraction(a, b, expected):
-    '''Test for subtraction operation'''
-    operation = Subtraction.create(a, b)
-    assert operation.compute() == expected
-    assert str(operation) == f"Subtraction: {a} - {b} = {expected}"
-    assert repr(operation) == f"Subtraction(a={a}, b={b}, result={expected})"
+def test_addition():
+    calc = Calculation(operation="Addition", operand1=Decimal("2"), operand2=Decimal("3"))
+    assert calc.result == Decimal("5")
 
-# Parameterized test for Multiplication with __str__ and __repr__ checks
-@pytest.mark.parametrize("a, b, expected", [
-    (2, 2, 4), (3, 5, 15), (0, 5, 0), (-1, 1, -1)
-])
-def test_multiplication(a, b, expected):
-    '''Test for multiplication operation'''
-    operation = Multiplication.create(a, b)
-    assert operation.compute() == expected
-    assert str(operation) == f"Multiplication: {a} * {b} = {expected}"
-    assert repr(operation) == f"Multiplication(a={a}, b={b}, result={expected})"
 
-# Parameterized test for Division with __str__ and __repr__ checks
-@pytest.mark.parametrize("a, b, expected", [
-    (2, 2, 1), (10, 5, 2), (9, 3, 3), (7, 2, 3.5)
-])
-def test_division(a, b, expected):
-    '''Test for division operation'''
-    operation = Division.create(a, b)
-    assert operation.compute() == expected
-    assert str(operation) == f"Division: {a} / {b} = {expected}"
-    assert repr(operation) == f"Division(a={a}, b={b}, result={expected})"
+def test_subtraction():
+    calc = Calculation(operation="Subtraction", operand1=Decimal("5"), operand2=Decimal("3"))
+    assert calc.result == Decimal("2")
 
-# Test for division by zero exception
-def test_division_by_zero_exception():
-    '''Test for division by zero exception'''
-    operation = Division.create(10, 0)
-    with pytest.raises(ZeroDivisionError):
-        operation.compute()
+
+def test_multiplication():
+    calc = Calculation(operation="Multiplication", operand1=Decimal("4"), operand2=Decimal("2"))
+    assert calc.result == Decimal("8")
+
+
+def test_division():
+    calc = Calculation(operation="Division", operand1=Decimal("8"), operand2=Decimal("2"))
+    assert calc.result == Decimal("4")
+
+
+def test_division_by_zero():
+    with pytest.raises(OperationError, match="Division by zero is not allowed"):
+        Calculation(operation="Division", operand1=Decimal("8"), operand2=Decimal("0"))
+
+
+def test_power():
+    calc = Calculation(operation="Power", operand1=Decimal("2"), operand2=Decimal("3"))
+    assert calc.result == Decimal("8")
+
+
+def test_negative_power():
+    with pytest.raises(OperationError, match="Negative exponents are not supported"):
+        Calculation(operation="Power", operand1=Decimal("2"), operand2=Decimal("-3"))
+
+
+def test_root():
+    calc = Calculation(operation="Root", operand1=Decimal("16"), operand2=Decimal("2"))
+    assert calc.result == Decimal("4")
+
+
+def test_invalid_root():
+    with pytest.raises(OperationError, match="Cannot calculate root of negative number"):
+        Calculation(operation="Root", operand1=Decimal("-16"), operand2=Decimal("2"))
+
+
+def test_unknown_operation():
+    with pytest.raises(OperationError, match="Unknown operation"):
+        Calculation(operation="Unknown", operand1=Decimal("5"), operand2=Decimal("3"))
+
+
+def test_to_dict():
+    calc = Calculation(operation="Addition", operand1=Decimal("2"), operand2=Decimal("3"))
+    result_dict = calc.to_dict()
+    assert result_dict == {
+        "operation": "Addition",
+        "operand1": "2",
+        "operand2": "3",
+        "result": "5",
+        "timestamp": calc.timestamp.isoformat()
+    }
+
+
+def test_from_dict():
+    data = {
+        "operation": "Addition",
+        "operand1": "2",
+        "operand2": "3",
+        "result": "5",
+        "timestamp": datetime.now().isoformat()
+    }
+    calc = Calculation.from_dict(data)
+    assert calc.operation == "Addition"
+    assert calc.operand1 == Decimal("2")
+    assert calc.operand2 == Decimal("3")
+    assert calc.result == Decimal("5")
+
+
+def test_invalid_from_dict():
+    data = {
+        "operation": "Addition",
+        "operand1": "invalid",
+        "operand2": "3",
+        "result": "5",
+        "timestamp": datetime.now().isoformat()
+    }
+    with pytest.raises(OperationError, match="Invalid calculation data"):
+        Calculation.from_dict(data)
+
+
+def test_format_result():
+    calc = Calculation(operation="Division", operand1=Decimal("1"), operand2=Decimal("3"))
+    assert calc.format_result(precision=2) == "0.33"
+    assert calc.format_result(precision=10) == "0.3333333333"
+
+
+def test_equality():
+    calc1 = Calculation(operation="Addition", operand1=Decimal("2"), operand2=Decimal("3"))
+    calc2 = Calculation(operation="Addition", operand1=Decimal("2"), operand2=Decimal("3"))
+    calc3 = Calculation(operation="Subtraction", operand1=Decimal("5"), operand2=Decimal("3"))
+    assert calc1 == calc2
+    assert calc1 != calc3

@@ -1,113 +1,73 @@
 import pytest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 from app.calculation import Calculation
-from app.history_manager import OperationCommand, HistoryManager  # Assuming HistoryManager is in 'history_manager'
+from app.history import LoggingObserver, AutoSaveObserver
+from app.calculator import Calculator
+from app.calculator_config import CalculatorConfig
 
-# Test OperationCommand
-def test_operation_command_execution():
-    """
-    Test that OperationCommand calls the compute method on the given operation.
-    """
-    # Create a mock Calculation object
-    mock_operation = Mock(spec=Calculation)
-    mock_operation.compute.return_value = 10  # Set compute return value
+# Sample setup for mock calculation
+calculation_mock = Mock(spec=Calculation)
+calculation_mock.operation = "addition"
+calculation_mock.operand1 = 5
+calculation_mock.operand2 = 3
+calculation_mock.result = 8
 
-    # Create an OperationCommand with the mock operation
-    command = OperationCommand(mock_operation)
+# Test cases for LoggingObserver
 
-    # Execute the command and assert that compute is called and returns the expected result
-    result = command.execute()
-    assert result == 10
-    mock_operation.compute.assert_called_once()  # Ensure compute() was called exactly once
+@patch('logging.info')
+def test_logging_observer_logs_calculation(logging_info_mock):
+    observer = LoggingObserver()
+    observer.update(calculation_mock)
+    logging_info_mock.assert_called_once_with(
+        "Calculation performed: addition (5, 3) = 8"
+    )
 
-# Test HistoryManager
-def test_add_to_history():
-    """
-    Test adding an operation to the history.
-    """
-    # Create a mock OperationCommand
-    mock_command = Mock(spec=OperationCommand)
+def test_logging_observer_no_calculation():
+    observer = LoggingObserver()
+    with pytest.raises(AttributeError):
+        observer.update(None)  # Passing None should raise an exception as there's no calculation
 
-    # Create a HistoryManager instance
-    history_manager = HistoryManager()
+# Test cases for AutoSaveObserver
 
-    # Add the mock command to history and verify that it is stored correctly
-    history_manager.add_to_history(mock_command)
-    assert len(history_manager.get_full_history()) == 1
-    assert history_manager.get_full_history()[0] == mock_command
-
-def test_get_latest():
-    """
-    Test retrieving the latest n operations from history.
-    """
-    # Create mock OperationCommand objects
-    mock_command_1 = Mock(spec=OperationCommand)
-    mock_command_2 = Mock(spec=OperationCommand)
-
-    # Create a HistoryManager instance
-    history_manager = HistoryManager()
-
-    # Add two commands to history
-    history_manager.add_to_history(mock_command_1)
-    history_manager.add_to_history(mock_command_2)
-
-    # Retrieve the latest operation
-    latest_operation = history_manager.get_latest(1)
-    assert len(latest_operation) == 1
-    assert latest_operation[0] == mock_command_2
-
-    # Retrieve the latest 2 operations
-    latest_two_operations = history_manager.get_latest(2)
-    assert len(latest_two_operations) == 2
-    assert latest_two_operations == [mock_command_1, mock_command_2]
-
-def test_clear_history():
-    """
-    Test clearing the history.
-    """
-    # Create mock OperationCommand objects
-    mock_command_1 = Mock(spec=OperationCommand)
-    mock_command_2 = Mock(spec=OperationCommand)
-
-    # Create a HistoryManager instance
-    history_manager = HistoryManager()
-
-    # Add two commands to history
-    history_manager.add_to_history(mock_command_1)
-    history_manager.add_to_history(mock_command_2)
-
-    # Clear the history
-    history_manager.clear_history()
-
-    # Assert that the history is now empty
-    assert len(history_manager.get_full_history()) == 0
-
-def test_undo_last():
-    """
-    Test undoing the last operation in history.
-    """
-    # Create mock OperationCommand objects
-    mock_command_1 = Mock(spec=OperationCommand)
-    mock_command_2 = Mock(spec=OperationCommand)
-
-    # Create a HistoryManager instance
-    history_manager = HistoryManager()
-
-    # Add two commands to history
-    history_manager.add_to_history(mock_command_1)
-    history_manager.add_to_history(mock_command_2)
-
-    # Undo the last operation and verify the result
-    last_operation = history_manager.undo_last()
-    assert last_operation == mock_command_2
-    assert len(history_manager.get_full_history()) == 1
-
-    # Undo the next operation
-    last_operation = history_manager.undo_last()
-    assert last_operation == mock_command_1
-    assert len(history_manager.get_full_history()) == 0
-
-    # Ensure that undoing when the history is empty returns None
-    last_operation = history_manager.undo_last()
-    assert last_operation is None
+def test_autosave_observer_triggers_save():
+    calculator_mock = Mock(spec=Calculator)
+    calculator_mock.config = Mock(spec=CalculatorConfig)
+    calculator_mock.config.auto_save = True
+    observer = AutoSaveObserver(calculator_mock)
     
+    observer.update(calculation_mock)
+    calculator_mock.save_history.assert_called_once()
+
+@patch('logging.info')
+def test_autosave_observer_logs_autosave(logging_info_mock):
+    calculator_mock = Mock(spec=Calculator)
+    calculator_mock.config = Mock(spec=CalculatorConfig)
+    calculator_mock.config.auto_save = True
+    observer = AutoSaveObserver(calculator_mock)
+    
+    observer.update(calculation_mock)
+    logging_info_mock.assert_called_once_with("History auto-saved")
+
+def test_autosave_observer_does_not_trigger_save_when_disabled():
+    calculator_mock = Mock(spec=Calculator)
+    calculator_mock.config = Mock(spec=CalculatorConfig)
+    calculator_mock.config.auto_save = False
+    observer = AutoSaveObserver(calculator_mock)
+    
+    observer.update(calculation_mock)
+    calculator_mock.save_history.assert_not_called()
+
+# Additional negative test cases for AutoSaveObserver
+
+def test_autosave_observer_invalid_calculator():
+    with pytest.raises(TypeError):
+        AutoSaveObserver(None)  # Passing None should raise a TypeError
+
+def test_autosave_observer_no_calculation():
+    calculator_mock = Mock(spec=Calculator)
+    calculator_mock.config = Mock(spec=CalculatorConfig)
+    calculator_mock.config.auto_save = True
+    observer = AutoSaveObserver(calculator_mock)
+    
+    with pytest.raises(AttributeError):
+        observer.update(None)  # Passing None should raise an exception

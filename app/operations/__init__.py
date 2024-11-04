@@ -1,76 +1,162 @@
-from typing import Union
+########################
+# Operation Classes    #
+########################
 
-# Define a type alias for numbers (both int and float)
+from abc import ABC, abstractmethod
+from decimal import Decimal
+from typing import Dict
+from app.exceptions import ValidationError
 
-Number = Union[int, float]
 
-# addition function 
-def addition(a: Number, b: Number) -> Number:
-    """
-    This function takes two numbers as arguments and returns their sum.
+class Operation(ABC):
+    """Abstract base class for calculator operations."""
     
-    Arguments:
-    a -- The first number (float or int)
-    b -- The second number (float or int)
-    
-    This function adheres to the Single Responsibility Principle (SRP) as it performs only one task: addition.
-    
-    Example:
-    >>> addition(3, 4)
-    7
-    """
-    return a + b  # Return the sum of a and b
+    @abstractmethod
+    def execute(self, a: Decimal, b: Decimal) -> Decimal:
+        """
+        Execute the operation.
+        
+        Args:
+            a: First operand
+            b: Second operand
+            
+        Returns:
+            Decimal: Result of operation
+            
+        Raises:
+            OperationError: If operation fails
+        """
+        pass
 
-# subtraction function
-def subtraction(a: Number, b: Number) -> Number:
-    """
-    This function takes two numbers as arguments and returns the result of subtracting b from a.
-    
-    Arguments:
-    a -- The first number (float or int)
-    b -- The second number (float or int)
-    
-    This function also adheres to SRP by focusing on the single task of subtraction.
-    
-    Example:
-    >>> subtraction(10, 4)
-    6
-    """
-    return a - b  # Return the result of a minus b
+    def validate_operands(self, a: Decimal, b: Decimal) -> None:
+        """
+        Validate operands before execution.
+        
+        Args:
+            a: First operand
+            b: Second operand
+            
+        Raises:
+            ValidationError: If operands are invalid
+        """
+        pass
 
-def multiplication(a: Number, b: Number) -> Number:
-    """
-    This function takes two numbers as arguments and returns their product.
-    
-    Arguments:
-    a -- The first number (float or int)
-    b -- The second number (float or int)
-    
-    Like the other functions, this follows SRP by handling only multiplication.
-    
-    Example:
-    >>> multiplication(2, 5)
-    10
-    """
-    return a * b  # Return the product of a and b
+    def __str__(self) -> str:
+        """Return operation name for display."""
+        return self.__class__.__name__
 
-def division(a: Number, b: Number) -> Number:
-    """
-    This function takes two numbers as arguments and returns the result of dividing a by b.
+class Addition(Operation):
+    """Addition operation implementation."""
     
-    Arguments:
-    a -- The first number (float or int)
-    b -- The second number (float or int)
+    def execute(self, a: Decimal, b: Decimal) -> Decimal:
+        """Add two numbers."""
+        self.validate_operands(a, b)
+        return a + b
+
+class Subtraction(Operation):
+    """Subtraction operation implementation."""
     
-    It is important to handle division by zero here to avoid runtime errors.
-    A common way to handle this would be by catching ZeroDivisionError when used in a broader context.
+    def execute(self, a: Decimal, b: Decimal) -> Decimal:
+        """Subtract b from a."""
+        self.validate_operands(a, b)
+        return a - b
+
+class Multiplication(Operation):
+    """Multiplication operation implementation."""
     
-    Example:
-    >>> division(10, 2)
-    5.0
+    def execute(self, a: Decimal, b: Decimal) -> Decimal:
+        """Multiply two numbers."""
+        self.validate_operands(a, b)
+        return a * b
+
+class Division(Operation):
+    """Division operation implementation."""
     
-    Potential Error:
-    If b is 0, a ZeroDivisionError will occur. This could be handled using EAFP (Easier to Ask Forgiveness than Permission)
-    where you try the operation and handle the exception if it occurs.
-    """
-    return a / b  # Return the result of a divided by b
+    def validate_operands(self, a: Decimal, b: Decimal) -> None:
+        """Validate operands, checking for division by zero."""
+        super().validate_operands(a, b)
+        if b == 0:
+            raise ValidationError("Division by zero is not allowed")
+
+    def execute(self, a: Decimal, b: Decimal) -> Decimal:
+        """Divide a by b."""
+        self.validate_operands(a, b)
+        return a / b
+
+class Power(Operation):
+    """Power (exponentiation) operation implementation."""
+    
+    def validate_operands(self, a: Decimal, b: Decimal) -> None:
+        """Validate operands for power operation."""
+        super().validate_operands(a, b)
+        if b < 0:
+            raise ValidationError("Negative exponents not supported")
+
+    def execute(self, a: Decimal, b: Decimal) -> Decimal:
+        """Calculate a raised to power b."""
+        self.validate_operands(a, b)
+        return Decimal(pow(float(a), float(b)))
+
+class Root(Operation):
+    """Root operation implementation."""
+    
+    def validate_operands(self, a: Decimal, b: Decimal) -> None:
+        """Validate operands for root operation."""
+        super().validate_operands(a, b)
+        if a < 0:
+            raise ValidationError("Cannot calculate root of negative number")
+        if b == 0:
+            raise ValidationError("Zero root is undefined")
+
+    def execute(self, a: Decimal, b: Decimal) -> Decimal:
+        """Calculate the b-th root of a."""
+        self.validate_operands(a, b)
+        return Decimal(pow(float(a), 1/float(b)))
+
+########################
+# Factory Pattern      #
+########################
+
+class OperationFactory:
+    """Factory class for creating operation instances."""
+    
+    _operations: Dict[str, type] = {
+        'add': Addition,
+        'subtract': Subtraction,
+        'multiply': Multiplication,
+        'divide': Division,
+        'power': Power,
+        'root': Root
+    }
+
+    @classmethod
+    def register_operation(cls, name: str, operation_class: type) -> None:
+        """
+        Register a new operation type.
+        
+        Args:
+            name: Operation identifier
+            operation_class: Operation class to register
+        """
+        if not issubclass(operation_class, Operation):
+            raise TypeError("Operation class must inherit from Operation")
+        cls._operations[name.lower()] = operation_class
+
+    @classmethod
+    def create_operation(cls, operation_type: str) -> Operation:
+        """
+        Create operation instance.
+        
+        Args:
+            operation_type: Type of operation to create
+            
+        Returns:
+            Operation instance
+            
+        Raises:
+            ValueError: If operation type is unknown
+        """
+        operation_class = cls._operations.get(operation_type.lower())
+        if not operation_class:
+            raise ValueError(f"Unknown operation: {operation_type}")
+        return operation_class()

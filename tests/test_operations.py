@@ -1,6 +1,7 @@
-import pytest
+'''Operations tests'''
 from decimal import Decimal
 from typing import Any, Dict, Type
+import pytest
 
 from app.exceptions import ValidationError
 from app.operations import (
@@ -21,6 +22,7 @@ class TestOperation:
     def test_str_representation(self):
         """Test that string representation returns class name."""
         class TestOp(Operation):
+            """Test for operation"""
             def execute(self, a: Decimal, b: Decimal) -> Decimal:
                 return a
 
@@ -47,7 +49,7 @@ class BaseOperationTest:
     def test_invalid_operations(self):
         """Test operation with invalid inputs raises appropriate errors."""
         operation = self.operation_class()
-        for name, case in self.invalid_test_cases.items():
+        for _name, case in self.invalid_test_cases.items():
             a = Decimal(str(case["a"]))
             b = Decimal(str(case["b"]))
             error = case.get("error", ValidationError)
@@ -211,6 +213,7 @@ class TestOperationFactory:
     def test_register_valid_operation(self):
         """Test registering a new valid operation."""
         class NewOperation(Operation):
+            """Test new operation"""
             def execute(self, a: Decimal, b: Decimal) -> Decimal:
                 return a
 
@@ -221,7 +224,8 @@ class TestOperationFactory:
     def test_register_invalid_operation(self):
         """Test registering an invalid operation class raises error."""
         class InvalidOperation:
-            pass
+            """Test invalid operation"""
+
 
         with pytest.raises(TypeError, match="Operation class must inherit"):
             OperationFactory.register_operation("invalid", InvalidOperation)

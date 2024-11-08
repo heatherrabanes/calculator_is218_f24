@@ -1,10 +1,10 @@
 # IS218 Fall 2024 Midterm Calculator App
 ## Table of Contents
-1. [Design Patterns](/README.md#design-patterns)
-2. [Environment Variables](/README.md#environemnt-variables)
-3. [Logging](/README.md#logging)
-4. [LBYL/EAFP Implementation](/README.md#lbyleafp-implementation)
-5. [Demo](/README.md#demo)
+1. [Design Patterns](https://github.com/heatherrabanes/calculator_is218_f24?tab=readme-ov-file#design-patterns)
+2. [Environment Variables](https://github.com/heatherrabanes/calculator_is218_f24?tab=readme-ov-file#environment-variables)
+3. [Logging](https://github.com/heatherrabanes/calculator_is218_f24?tab=readme-ov-file#logging)
+4. [LBYL/EAFP Implementation](https://github.com/heatherrabanes/calculator_is218_f24?tab=readme-ov-file#lbyleafp-implementation)
+5. [Demo](https://github.com/heatherrabanes/calculator_is218_f24?tab=readme-ov-file#demo)
 ## Design Patterns
 ### Strategy
 ```python
